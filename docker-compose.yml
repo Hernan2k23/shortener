@@ -1,0 +1,88 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    # Root credentials for the dev instance. Override in .env if rotating.
+    # The initdb step only runs on a fresh volume; once the data directory
+    # is initialized the env vars become metadata that mongod reads as the
+    # credentials expected on incoming connections.
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-shortener}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-shortener}
+    healthcheck:
+      test: >-
+        mongosh --quiet
+        --username ${MONGO_USERNAME:-shortener}
+        --password ${MONGO_PASSWORD:-shortener}
+        --authenticationDatabase admin
+        --eval "db.runCommand({ ping: 1 }).ok"
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - mongo_data:/data/db
+    # Published for local inspection with MongoDB Compass / mongosh.
+    # Override with MONGO_HOST_PORT in .env if 27017 is taken on the host.
+    ports:
+      - "${MONGO_HOST_PORT:-27017}:27017"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Single-user auth: a password that works for the default user. ioredis
+    # authenticates with REDIS_PASSWORD on connect (no username needed for
+    # the default user).
+    command: >-
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-shortener}
+    healthcheck:
+      test: >-
+        redis-cli
+        --pass ${REDIS_PASSWORD:-shortener}
+        --no-auth-warning
+        ping
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # No port published by default; uncomment to inspect with redis-cli on the host
+    # ports:
+    #   - "6379:6379"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shortener:latest
+    restart: unless-stopped
+    ports:
+      # Single source of truth: PORT controls both the in-container listen
+      # port (Nest binds to 3000) and the host-published mapping. Override
+      # PORT in .env if 3000 is taken on the host.
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Mongo credentials live in the URI; the app reads MONGO_URL verbatim
+      # and does not need separate MONGO_USERNAME / MONGO_PASSWORD envs.
+      MONGO_URL: mongodb://${MONGO_USERNAME:-shortener}:${MONGO_PASSWORD:-shortener}@mongo:27017/shortener?authSource=admin
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-shortener}
+      CACHE_TTL_SECONDS: 3600
+      NEGATIVE_CACHE_TTL_SECONDS: 30
+      SHORT_BASE_URL: ${SHORT_BASE_URL:-http://localhost:${PORT:-3000}}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+
+volumes:
+  mongo_data:

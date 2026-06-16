@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shorty — URL Shortener. Fast, Free, Fun.</title>
+  <meta name="description" content="Shorty chops long URLs down to size. Create short, shareable links with custom aliases and track your clicks." />
+  <meta property="og:title" content="Shorty — URL Shortener" />
+  <meta property="og:description" content="Fast, free, and fun URL shortener with click tracking." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#6c3bf1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --purple-50: #f6f2ff;
+      --purple-100: #ede4ff;
+      --purple-200: #d6c4ff;
+      --purple-300: #b294ff;
+      --purple-400: #8c5cff;
+      --purple-500: #6c3bf1;
+      --purple-600: #5528cc;
+      --purple-700: #441fa8;
+      --purple-800: #361a82;
+      --purple-900: #2b1560;
+
+      --pink-400: #ff6b9d;
+      --pink-500: #f94a7a;
+
+      --cyan-400: #4dc9f6;
+      --cyan-500: #1fb6e0;
+
+      --green-400: #67e8a9;
+      --green-500: #36d685;
+
+      --yellow-300: #ffd93d;
+      --yellow-400: #f7c800;
+
+      --orange-400: #ff8a5c;
+
+      --neutral-50: #faf9fc;
+      --neutral-100: #f3f0f7;
+      --neutral-200: #e1dae9;
+      --neutral-300: #c4b8d1;
+      --neutral-400: #a692b9;
+      --neutral-500: #8a74a0;
+      --neutral-600: #6c5780;
+      --neutral-700: #4e3d5e;
+      --neutral-800: #322640;
+      --neutral-900: #1c1426;
+
+      --font-display: 'Fredoka', sans-serif;
+      --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+
+      --shadow-sm: 0 2px 8px rgba(108, 59, 241, 0.06);
+      --shadow-md: 0 8px 32px rgba(108, 59, 241, 0.10);
+      --shadow-lg: 0 16px 48px rgba(108, 59, 241, 0.14);
+      --shadow-xl: 0 24px 64px rgba(108, 59, 241, 0.18);
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--neutral-50);
+      color: var(--neutral-800);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ---- utility ---- */
+    .container {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ---- background effect ---- */
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .bg-glow .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      animation: orbFloat 20s infinite ease-in-out;
+    }
+    .bg-glow .orb:nth-child(1) {
+      width: 500px; height: 500px;
+      background: var(--purple-400);
+      top: -10%; left: -8%;
+      animation-delay: 0s;
+    }
+    .bg-glow .orb:nth-child(2) {
+      width: 400px; height: 400px;
+      background: var(--pink-400);
+      top: 55%; right: -6%;
+      animation-delay: -6s;
+      animation-duration: 25s;
+    }
+    .bg-glow .orb:nth-child(3) {
+      width: 350px; height: 350px;
+      background: var(--cyan-400);
+      bottom: -5%; left: 40%;
+      animation-delay: -12s;
+      animation-duration: 18s;
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(60px, -80px) scale(1.1); }
+      50% { transform: translate(-40px, 40px) scale(0.9); }
+      75% { transform: translate(80px, 60px) scale(1.05); }
+    }
+
+    /* ---- nav ---- */
+    nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--neutral-900);
+      text-decoration: none;
+    }
+    .nav-logo .emoji {
+      font-size: 30px;
+      display: inline-block;
+      animation: wiggle 2.5s infinite ease-in-out;
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-6deg); }
+      40% { transform: rotate(6deg); }
+      60% { transform: rotate(-4deg); }
+      80% { transform: rotate(4deg); }
+    }
+    .nav-logo .gradient {
+      background: linear-gradient(135deg, var(--purple-500), var(--pink-500));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+    }
+    .nav-links a {
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--neutral-500);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--neutral-800); }
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 22px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--purple-500), var(--purple-600));
+      color: #fff !important;
+      font-weight: 600;
+      font-size: 14px;
+      transition: transform 0.2s, box-shadow 0.2s !important;
+      box-shadow: 0 4px 16px rgba(108, 59, 241, 0.25);
+    }
+    .nav-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(108, 59, 241, 0.35) !important;
+    }
+
+    /* ---- sections ---- */
+    section { position: relative; z-index: 1; }
+
+    /* ---- hero ---- */
+    .hero {
+      padding: 48px 0 56px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--purple-100);
+      color: var(--purple-600);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 50px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s ease-out;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(44px, 8vw, 72px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: var(--neutral-900);
+      margin-bottom: 16px;
+      animation: fadeUp 0.6s ease-out 0.1s both;
+    }
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--purple-500), var(--pink-500), var(--cyan-500));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--neutral-500);
+      max-width: 520px;
+      margin: 0 auto 32px;
+      animation: fadeUp 0.6s ease-out 0.2s both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---- form card ---- */
+    .hero-form-wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      animation: fadeUp 0.6s ease-out 0.3s both;
+    }
+    .hero-card {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255,255,255,0.6);
+      box-shadow: var(--shadow-lg);
+      padding: 32px;
+      transition: box-shadow 0.3s;
+    }
+    .hero-card:focus-within {
+      box-shadow: var(--shadow-xl);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+    .input-row .input-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .input-row input[type="url"] {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid var(--neutral-200);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--neutral-800);
+      background: #fff;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      outline: none;
+    }
+    .input-row input[type="url"]:focus {
+      border-color: var(--purple-400);
+      box-shadow: 0 0 0 4px rgba(108, 59, 241, 0.10);
+    }
+    .input-row input[type="url"]::placeholder {
+      color: var(--neutral-300);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple-500), var(--purple-600));
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(108, 59, 241, 0.25);
+    }
+    .btn-primary:hover:not(:disabled) {
+      box-shadow: 0 6px 24px rgba(108, 59, 241, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--purple-100);
+      color: var(--purple-600);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--purple-200);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--neutral-500);
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+    .btn-ghost:hover { color: var(--neutral-800); }
+
+    .btn-success {
+      background: var(--green-400);
+      color: #0f3d24;
+      box-shadow: 0 4px 12px rgba(54, 214, 133, 0.3);
+    }
+    .btn-success:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(54, 214, 133, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2.5px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    .spinner-dark {
+      border-color: rgba(108, 59, 241, 0.2);
+      border-top-color: var(--purple-500);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- expandable panel ---- */
+    .expand-panel {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .expand-panel.expanded {
+      grid-template-rows: 1fr;
+    }
+    .expand-panel > div {
+      overflow: hidden;
+    }
+
+    .panel-inner {
+      padding-top: 16px;
+    }
+
+    .alias-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .alias-row .alias-prefix {
+      font-size: 14px;
+      color: var(--neutral-400);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .alias-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid var(--neutral-200);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--neutral-800);
+      background: #fff;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      max-width: 220px;
+    }
+    .alias-row input:focus {
+      border-color: var(--purple-400);
+      box-shadow: 0 0 0 4px rgba(108, 59, 241, 0.08);
+    }
+    .alias-row input::placeholder { color: var(--neutral-300); }
+    /* ---- result ---- */
+    .result-box {
+      display: none;
+      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .result-box.show { display: block; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--purple-200), transparent);
+      margin: 18px 0;
+    }
+
+    .result-link-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--purple-50);
+      border-radius: var(--radius-md);
+      padding: 6px 6px 6px 18px;
+    }
+    .result-link-row .url {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--purple-500);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .result-link-row .url a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .result-link-row .url a:hover { text-decoration: underline; }
+
+    .result-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--neutral-400);
+    }
+    .result-meta strong {
+      color: var(--neutral-700);
+      font-weight: 600;
+    }
+
+    .error-msg {
+      display: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: #dc2626;
+      margin-top: 10px;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .error-msg.show { display: flex; }
+
+    /* ---- features ---- */
+    .features {
+      padding: 72px 0 48px;
+    }
+    .features h2 {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+      color: var(--neutral-900);
+    }
+    .features .subtitle {
+      text-align: center;
+      color: var(--neutral-500);
+      font-size: 16px;
+      margin-bottom: 48px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+    }
+    .feature-card {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      border: 1px solid var(--neutral-100);
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    .feature-icon.purple { background: var(--purple-100); }
+    .feature-icon.pink { background: #fce8f0; }
+    .feature-icon.cyan { background: #ddf4fd; }
+    .feature-icon.green { background: #ddfaec; }
+    .feature-card h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--neutral-900);
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--neutral-500);
+      line-height: 1.65;
+    }
+
+    /* ---- stats section ---- */
+    .stats-section {
+      padding: 20px 0 72px;
+    }
+    .stats-card-inner {
+      background: #fff;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--neutral-100);
+      box-shadow: var(--shadow-sm);
+      padding: 28px 32px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .stats-card-inner h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--neutral-900);
+    }
+    .stats-card-inner .desc {
+      font-size: 14px;
+      color: var(--neutral-500);
+      margin-bottom: 16px;
+    }
+    .stats-input-row {
+      display: flex;
+      gap: 8px;
+    }
+    .stats-input-row input {
+      flex: 1;
+      padding: 11px 16px;
+      border: 2px solid var(--neutral-200);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--neutral-800);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .stats-input-row input:focus {
+      border-color: var(--purple-400);
+      box-shadow: 0 0 0 4px rgba(108, 59, 241, 0.08);
+    }
+
+    .stats-display {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .stat-chip {
+      background: var(--neutral-50);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-chip .num {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--purple-500);
+    }
+    .stat-chip .label {
+      font-size: 12px;
+      color: var(--neutral-400);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* ---- how it works ---- */
+    .how {
+      padding: 56px 0 72px;
+    }
+    .how h2 {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 48px;
+      color: var(--neutral-900);
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 32px;
+      counter-reset: step;
+    }
+    .step {
+      text-align: center;
+      counter-increment: step;
+    }
+    .step-num {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple-500), var(--pink-500));
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      box-shadow: 0 4px 16px rgba(108, 59, 241, 0.25);
+    }
+    .step h4 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--neutral-900);
+    }
+    .step p {
+      font-size: 14px;
+      color: var(--neutral-500);
+    }
+
+    /* ---- footer ---- */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--neutral-100);
+      padding: 40px 0 32px;
+    }
+    .footer-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .footer-brand {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--neutral-800);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .footer-brand .emoji { font-size: 22px; }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+    .footer-links a {
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--neutral-400);
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--neutral-700); }
+    .footer-copy {
+      font-size: 13px;
+      color: var(--neutral-300);
+    }
+
+    /* ---- toast ---- */
+    .toast-container {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--neutral-800);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: auto;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ---- responsive ---- */
+    @media (max-width: 768px) {
+      .container { padding: 0 16px; }
+      .hero { padding: 32px 0 40px; }
+      .hero-card { padding: 24px 20px; }
+      .input-row { flex-direction: column; }
+      .nav-links { gap: 16px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .result-link-row { flex-wrap: wrap; padding: 12px; }
+      .result-link-row .url { width: 100%; }
+      .stats-display { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; gap: 24px; }
+      .footer-grid { flex-direction: column; text-align: center; }
+    }
+
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 36px; }
+      .hero p { font-size: 16px; }
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ---- skip link ---- */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 16px;
+      background: var(--purple-500);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      z-index: 1000;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+    }
+    .skip-link:focus { top: 16px; }
+  </style>
+</head>
+<body>
+
+  <a href="#main" class="skip-link">Skip to main content</a>
+
+  <!-- background orbs -->
+  <div class="bg-glow" aria-hidden="true">
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
+  </div>
+
+  <!-- nav -->
+  <div class="container" role="banner">
+    <nav role="navigation" aria-label="Main navigation">
+      <a href="#" class="nav-logo">
+        <span class="emoji">✂️</span>
+        <span class="gradient">Shorty</span>
+      </a>
+      <div class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#stats">Stats</a>
+        <a href="#main" class="nav-cta">✂️ Snip a URL</a>
+      </div>
+    </nav>
+  </div>
+
+  <main id="main">
+
+    <!-- hero -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container">
+        <div class="hero-badge">
+          <span>⚡</span> Free &amp; open source
+        </div>
+        <h1 id="hero-title">
+          Chop long URLs<br />
+          down to <span class="gradient">size</span>
+        </h1>
+        <p>Shorty turns massive links into tiny, shareable snippets. Custom aliases, click tracking — all with a smile.</p>
+
+        <div class="hero-form-wrap">
+          <div class="hero-card" role="form" aria-label="Create a short URL">
+            <form id="createForm">
+              <div class="input-row">
+                <div class="input-wrap">
+                  <label for="originalUrl" style="font-size:13px;font-weight:600;color:var(--neutral-500);display:block;margin-bottom:4px;">Long URL</label>
+                  <input type="url" id="originalUrl" placeholder="Paste your long URL here…" required autocomplete="url" />
+                </div>
+                <button type="submit" class="btn btn-primary" id="createBtn">
+                  <span>✂️ Snip!</span>
+                </button>
+              </div>
+
+              <div class="panel-inner">
+                <div class="alias-row">
+                  <div id="aliasWrap" style="display:flex;flex:1;align-items:center;gap:4px;">
+                    <label for="alias" style="font-size:13px;font-weight:600;color:var(--neutral-500);white-space:nowrap;">Custom alias</label>
+                    <span class="alias-prefix">shorty.com/</span>
+                    <input type="text" id="alias" placeholder="my-link" pattern="^[A-Za-z0-9_-]{3,32}$" />
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <div class="error-msg" id="createError" role="alert"></div>
+
+            <!-- result -->
+            <div class="result-box" id="createResult">
+              <div class="result-divider" aria-hidden="true"></div>
+              <div style="font-size:14px;font-weight:500;color:var(--neutral-500);margin-bottom:8px;">Your short link is ready! 🎉</div>
+              <div class="result-link-row">
+                <span class="url"><a id="shortUrlLink" target="_blank" rel="noopener"></a></span>
+                <button class="btn btn-success" id="copyBtn" style="padding:10px 18px;font-size:13px;">📋 Copy</button>
+              </div>
+              <div class="result-meta">
+                <span>Code: <strong id="resultCode"></strong></span>
+                <button class="btn btn-ghost" id="viewStatsBtn" style="margin-left:auto;">📊 View stats</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+    <!-- how it works -->
+    <section class="how" id="how" aria-labelledby="how-title">
+      <div class="container">
+        <h2 id="how-title">How it works</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <h4>Paste your URL</h4>
+            <p>Drop any long link into the box above. Optionally pick a custom alias.</p>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <h4>Snip it</h4>
+            <p>Hit the button and we'll generate a short, shareable code in milliseconds.</p>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <h4>Share &amp; track</h4>
+            <p>Send your short link anywhere. Check stats anytime to see how it's performing.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- stats -->
+    <section class="stats-section" id="stats" aria-labelledby="stats-title">
+      <div class="container">
+        <div class="stats-card-inner">
+          <h3 id="stats-title">📊 Link stats</h3>
+          <p class="desc">Look up how many clicks a short link has received.</p>
+          <div class="stats-input-row">
+            <div style="flex:1;">
+              <label for="statsCode" style="font-size:13px;font-weight:600;color:var(--neutral-500);display:block;margin-bottom:4px;">Short code</label>
+              <input type="text" id="statsCode" placeholder="e.g. aB3xQ" style="width:100%;" />
+            </div>
+            <button class="btn btn-secondary" id="lookupStatsBtn">🔍 Look up</button>
+          </div>
+          <div class="error-msg" id="statsError" role="alert"></div>
+          <div class="result-box" id="statsResult">
+            <div class="stats-display">
+              <div class="stat-chip">
+                <div class="num" id="statTotalClicks">0</div>
+                <div class="label">Total clicks</div>
+              </div>
+              <div class="stat-chip">
+                <div class="num" id="statLastClick" style="font-size:18px;">—</div>
+                <div class="label">Last click</div>
+              </div>
+            </div>
+            <div style="text-align:center;font-size:13px;color:var(--neutral-400);margin-top:8px;">
+              Code: <strong id="statCode" style="color:var(--neutral-700);"></strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- footer -->
+  <footer role="contentinfo">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <span class="emoji">✂️</span> Shorty
+        </div>
+        <div class="footer-links">
+          <a href="#main">Create link</a>
+          <a href="#stats">Stats</a>
+        </div>
+        <div class="footer-copy">&copy; 2026 Shorty</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- toast -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    // ---- Backend wiring ----
+    // The page is served by the same NestJS process (see AppModule's
+    // ServeStatic setup), so the API is on the same origin. We still
+    // pin a default port for `file://` previews and as a fallback if
+    // someone serves the HTML from somewhere else.
+    const DEFAULT_PORT = 3000;
+    const BASE = (() => {
+      // When the page is served from the NestJS process,
+      // window.location.origin already points at it (e.g. http://localhost:3000).
+      // Only fall back to a synthesized URL if origin is "null" (file://).
+      if (window.location.origin && window.location.origin !== 'null') {
+        return window.location.origin;
+      }
+      return `http://localhost:${DEFAULT_PORT}`;
+    })();
+
+    // ---- toast ----
+    function showToast(msg) {
+      const container = document.getElementById('toastContainer');
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.textContent = msg;
+      container.appendChild(el);
+      requestAnimationFrame(() => el.classList.add('show'));
+      setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 300);
+      }, 2800);
+    }
+
+    // ---- alias toggle ----
+    // ---- create ----
+    const createForm = document.getElementById('createForm');
+    const originalUrl = document.getElementById('originalUrl');
+    const alias = document.getElementById('alias');
+    const createBtn = document.getElementById('createBtn');
+    const createError = document.getElementById('createError');
+    const createResult = document.getElementById('createResult');
+    const shortUrlLink = document.getElementById('shortUrlLink');
+    const resultCode = document.getElementById('resultCode');
+    const copyBtn = document.getElementById('copyBtn');
+    const viewStatsBtn = document.getElementById('viewStatsBtn');
+
+    createForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      createError.classList.remove('show');
+      createResult.classList.remove('show');
+
+      const body = { originalUrl: originalUrl.value.trim() };
+      if (alias.value.trim()) body.alias = alias.value.trim();
+
+      createBtn.disabled = true;
+      createBtn.innerHTML = '<span class="spinner"></span>';
+
+      try {
+        const res = await fetch(`${BASE}/api/urls`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          if (res.status === 409) throw new Error('That alias is already taken — try another one');
+          if (res.status === 400) {
+            const msg = data.message?.[0] || data.message || 'Invalid input';
+            throw new Error(msg);
+          }
+          throw new Error('Something went wrong — try again');
+        }
+
+        shortUrlLink.textContent = data.shortUrl;
+        shortUrlLink.href = data.shortUrl;
+        resultCode.textContent = data.code;
+        createResult.classList.add('show');
+        document.getElementById('statsCode').value = data.code;
+        showToast('Short link created! 🎉');
+      } catch (err) {
+        createError.textContent = '⚠️ ' + err.message;
+        createError.classList.add('show');
+      } finally {
+        createBtn.disabled = false;
+        createBtn.innerHTML = '<span>✂️ Snip!</span>';
+      }
+    });
+
+    // ---- copy ----
+    copyBtn.addEventListener('click', async () => {
+      const url = shortUrlLink.href;
+      try {
+        await navigator.clipboard.writeText(url);
+        const orig = copyBtn.innerHTML;
+        copyBtn.textContent = '✅ Copied!';
+        setTimeout(() => copyBtn.innerHTML = orig, 2000);
+        showToast('Copied to clipboard 📋');
+      } catch {
+        showToast('Could not copy — select the link manually');
+      }
+    });
+
+    // ---- view stats ----
+    viewStatsBtn.addEventListener('click', () => {
+      document.getElementById('statsCode').value = resultCode.textContent;
+      document.getElementById('lookupStatsBtn').click();
+      document.getElementById('stats').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // ---- stats ----
+    const statsCode = document.getElementById('statsCode');
+    const lookupStatsBtn = document.getElementById('lookupStatsBtn');
+    const statsError = document.getElementById('statsError');
+    const statsResult = document.getElementById('statsResult');
+    const statCode = document.getElementById('statCode');
+    const statTotalClicks = document.getElementById('statTotalClicks');
+    const statLastClick = document.getElementById('statLastClick');
+
+    lookupStatsBtn.addEventListener('click', async () => {
+      const code = statsCode.value.trim();
+      if (!code) {
+        statsError.textContent = '⚠️ Enter a short code';
+        statsError.classList.add('show');
+        return;
+      }
+      statsError.classList.remove('show');
+      statsResult.classList.remove('show');
+
+      lookupStatsBtn.disabled = true;
+      lookupStatsBtn.innerHTML = '<span class="spinner spinner-dark" style="width:18px;height:18px;"></span>';
+
+      try {
+        const res = await fetch(`${BASE}/api/stats/${encodeURIComponent(code)}`);
+        if (res.status === 404) throw new Error('No stats found — the code may not exist or has no clicks yet');
+        if (!res.ok) throw new Error('Could not fetch stats');
+        const data = await res.json();
+        statCode.textContent = data.code;
+        statTotalClicks.textContent = data.totalClicks;
+        statLastClick.textContent = data.lastClick
+          ? new Date(data.lastClick).toLocaleString()
+          : '—';
+        statsResult.classList.add('show');
+      } catch (err) {
+        statsError.textContent = '⚠️ ' + err.message;
+        statsError.classList.add('show');
+      } finally {
+        lookupStatsBtn.disabled = false;
+        lookupStatsBtn.innerHTML = '🔍 Look up';
+      }
+    });
+
+    statsCode.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') lookupStatsBtn.click();
+    });
+
+    // ---- health check (silent) ----
+    // /health/ready returns 503 with a body when degraded; we don't
+    // surface that to the user (silent health-ping is intentional —
+    // the only signal is the create button getting a 5xx back, which
+    // is already handled in the create flow).
+    async function checkHealth() {
+      try {
+        await fetch(`${BASE}/health/ready`, { signal: AbortSignal.timeout(3000) });
+      } catch { /* silent */ }
+    }
+    checkHealth();
+  </script>
+</body>
+</html>

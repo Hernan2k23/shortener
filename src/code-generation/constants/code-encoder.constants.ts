@@ -1,0 +1,2 @@
+export const CODE_ENCODER = 'CODE_ENCODER';
+export const FALLBACK_ENCODER = 'FALLBACK_ENCODER';
