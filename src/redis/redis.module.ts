@@ -13,7 +13,7 @@ import { REDIS_CLIENT } from './constants/redis.constants';
       useFactory: (configService: ConfigService): Redis => {
         const password = configService.get<string>('REDIS_PASSWORD');
         const username = configService.get<string>('REDIS_USERNAME');
-        return new Redis({
+        const client = new Redis({
           host: configService.getOrThrow<string>('REDIS_HOST'),
           port: configService.get<number>('REDIS_PORT', 6379),
           ...(username ? { username } : {}),
@@ -21,6 +21,10 @@ import { REDIS_CLIENT } from './constants/redis.constants';
           lazyConnect: false,
           maxRetriesPerRequest: 3,
         });
+        client.on('error', (err: Error) => {
+          console.error('Redis error:', err.message);
+        });
+        return client;
       },
     },
     RedisService,

@@ -33,13 +33,20 @@ export class RedisService {
   }
 
   async getCode(code: string): Promise<string | null> {
-    const [positive, negative] = await this.client.mget(
-      this.keyFor(code),
-      this.negativeKeyFor(code),
-    );
-    if (positive !== null) return positive;
-    if (negative !== null) return NEGATIVE_SENTINEL;
-    return null;
+    try {
+      const [positive, negative] = await this.client.mget(
+        this.keyFor(code),
+        this.negativeKeyFor(code),
+      );
+      if (positive !== null) return positive;
+      if (negative !== null) return NEGATIVE_SENTINEL;
+      return null;
+    } catch (err) {
+      this.logger.warn(
+        `Redis unavailable for getCode(${code}), falling through to DB — ${(err as Error).message}`,
+      );
+      return null;
+    }
   }
 
   async setCode(code: string, originalUrl: string): Promise<void> {
